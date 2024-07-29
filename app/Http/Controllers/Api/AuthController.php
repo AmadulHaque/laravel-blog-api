@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Rules\PhoneMailExists;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+
 
 class AuthController extends Controller
 {
@@ -20,7 +19,6 @@ class AuthController extends Controller
             $data = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
-                'phone' => ['required','regex:/^01[3-9]\d{8}$/','unique:users'],
                 'address' => 'required|string|max:200',
                 'password' => 'required|string|min:6',
             ]);
@@ -44,7 +42,7 @@ class AuthController extends Controller
         try {
             $request->validate([
                 'email'    => ['required'],
-                'password'   => [
+                'password' => [
                     'required',
                     function ($attribute, $value, $fail) use ($request, &$user) {
                         // Find the user by phone or email
@@ -60,10 +58,9 @@ class AuthController extends Controller
 
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
                 $user = Auth::user();
-                // $token = $user->createToken('Personal Access Token')->plainTextToken;
-                $token = $user->createToken('MyApp')->accessToken;
+                $user['token'] =  $user->createToken('MyApp')->accessToken;
 
-                return successResponse('User login in successfully',['token' => $token],200);
+                return successResponse('User login in successfully',['user' => $user],200);
 
             }
         } catch (ValidationException $e) {
