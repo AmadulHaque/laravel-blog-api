@@ -6,17 +6,32 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-       $categories = Category::get();
-       return successResponse('All categories', $categories);
+
+        $query = Category::with(['user:id,name']);
+
+        if ($request->has('search')) {
+            $query->where('name', 'LIKE', '%' . $request->input('search') . '%');
+        }
+
+        if ($request->has('status') && $request->input('status') != '') {
+            $query->where('status', $request->input('status'));
+        }
+
+        $categories = $query->paginate(10);
+
+
+        return successResponse('All categories', [
+            'categories' => $categories->items(),
+            'totalPages' => $categories->lastPage(),
+        ]);
     }
 
     /**
@@ -47,7 +62,9 @@ class CategoryController extends Controller
     public function update(CategoryRequest $request, Category $category)
     {
         $validated = $request->validated();
+
         $category->update($validated);
+
         return successResponse('Category updated successfully', $category);
     }
 

@@ -16,19 +16,21 @@ class CategoryRequest extends FormRequest
     public function rules(): array
     {
         // Retrieve the category ID from the route
-        $id = $this->route('category')->id ?? "NULL";
+        $category = $this->route('category');
+        $id = $category ? $category->id : null;
 
+        $field = $id ? 'id' : 'name';
         return [
-            'name'      => 'required|string|max:255|unique:categories,id,'. $id,
+            'name'      => "required|string|max:255|unique:categories,$field,". $id,
             'status'    => 'required|in:1,2,3',
-            'image'     => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
         ];
     }
 
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(
-            successResponse('Validation errors', $validator->errors(), 422)
+            errorResponse('Validation errors', $validator->errors(), 422)
         );
     }
 }

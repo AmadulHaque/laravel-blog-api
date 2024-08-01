@@ -61,7 +61,7 @@ class User extends Authenticatable implements HasMedia
         3 => 'User'
     ];
 
-    protected $appends = ['role_name'];
+    // protected $appends = ['role_name'];
 
 
     public function getRoleNameAttribute()

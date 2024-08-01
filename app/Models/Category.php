@@ -21,13 +21,30 @@ class Category extends Model implements HasMedia
         'image',
     ];
 
-    protected $appends  = ['image'];
+    protected $appends  = ['image','status_label'];
     protected $hidden = [
         'created_at',
         'updated_at',
         'media',
     ];
 
+
+    public static $statuses = [
+        1 => 'Published',
+        2 => 'Pending',
+        3 => 'Inactive'
+    ];
+
+
+    public static $PUBLISHED    = 1;
+    public static $PENDING      = 2;
+    public static $INACTIVE     = 3;
+
+
+    public function getStatusLabelAttribute()
+    {
+        return self::$statuses[$this->status] ?? 'Unknown';
+    }
 
     public function setNameAttribute($name)
     {

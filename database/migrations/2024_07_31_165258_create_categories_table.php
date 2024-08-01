@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
-            $table->string('name');
+            $table->string('name')->unique();
             $table->string('slug')->unique();
             $table->enum('status', [1, 2, 3])->default(1)->comment('1=Published 2=Pending 3=Inactive');
             $table->timestamps();
