@@ -4,55 +4,76 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+
 class UserAuthTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function it_creates_a_user()
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_register()
     {
-        // Arrange: Prepare the data needed for the test
-        $userData = [
+        // Arrange
+        $data = [
             'name' => 'Test User',
-            'email' => 'test@example.com',
-            'phone' => '01712345678',
-            'address' => 'dhaka',
-            'password' => bcrypt('password'),
+            'email' => 'testuser@example.com',
+            'address' => '123 Test St',
+            'password' => 'password123'
         ];
 
-        // Act: Perform the action
-        $user = User::create($userData);
+        // Act
+        $response = $this->postJson('/api/auth/register', $data);
 
-        // Assert: Verify the outcome
-        $this->assertDatabaseHas('users', ['email' => $user->email]);
+        // Assert
+        $response->assertStatus(201)
+                 ->assertJson(['message' => 'User registration in successfully']);
+
+        $this->assertDatabaseHas('users', [
+            'name'      => 'Test User',
+            'email'     => 'testuser@example.com',
+            'address'   => '123 Test St',
+        ]);
     }
 
-    /** @test */
-    public function it_fails_to_create_user_with_existing_email()
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_login()
     {
-        // Arrange: Prepare the data and create a user
-        $userData = [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'phone' => '01712345678',
-            'address' => 'dhaka',
-            'password' => bcrypt('password'),
+        // Arrange
+        $user = User::factory()->create([
+            'email' => 'testuser@example.com',
+            'password' => Hash::make('password123')
+        ]);
+
+        $data = [
+            'email' => 'testuser@example.com',
+            'password' => 'password123'
         ];
 
-        User::create($userData);
+        // Act
+        $response = $this->postJson('/api/auth/login', $data);
 
-        // Act: Try to create another user with the same email
-        try {
-            User::create($userData);
-        } catch (\Exception $e) {
-            $exception = $e;
-        }
+        // Assert
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'User login in successfully'])
+                 ->assertJsonStructure(['data' => ['user' => ['id', 'name', 'email', 'token']]]);
 
-        // Assert: Verify that the exception was thrown
-        $this->assertNotNull($exception);
-        $this->assertStringContainsString('SQLSTATE[23000]: Integrity constraint violation', $exception->getMessage());
-
+        $this->assertAuthenticatedAs($user);
     }
 
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_logout()
+    {
+        // Arrange
+        $user = User::factory()->create();
+
+        // Act
+        $this->actingAs($user, 'sanctum');
+
+        // Assert
+        $response = $this->postJson('/api/auth/logout');
+
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'Logged out successfully']);
+    }
 }

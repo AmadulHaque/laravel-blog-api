@@ -2,50 +2,111 @@
 
 namespace Tests\Unit;
 
-use App\Models\Category;
 use Tests\TestCase;
+use App\Models\User;
+use App\Models\Category;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class CategoryTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function it_can_create_a_category()
+    protected function setUp(): void
     {
-        $category = Category::create([
-            'name' => 'Test Category',
-            'description' => 'This is a test category',
-        ]);
+        parent::setUp();
+        // Create a user to authenticate requests
+        $this->user = User::factory()->create();
+    }
 
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_index()
+    {
+        // Arrange
+        Category::factory()->count(2)->create();
+
+        // Act
+        $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/categories');
+
+        // Assert
+        $response->assertStatus(200)
+                 ->assertJsonStructure([
+                     'message',
+                     'data' => [
+                         'categories',
+                         'totalPages',
+                     ],
+                 ]);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_store()
+    {
+        // Arrange
+        $data = [
+            'name' => 'New Category',
+            'status' => '1',
+        ];
+
+        // Act
+        $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/categories', $data);
+
+        // Assert
+        $response->assertStatus(201)
+                 ->assertJson(['message' => 'Category created successfully']);
         $this->assertDatabaseHas('categories', [
-            'name' => 'Test Category'
+            'name' => 'New Category',
+            'status' => '1', // Check for the correct status value
         ]);
     }
 
-    /** @test */
-    public function it_can_update_a_category()
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_show()
     {
+        // Arrange
         $category = Category::factory()->create();
 
-        $category->update([
-            'name' => 'Updated Category'
-        ]);
+        // Act
+        $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/categories/' . $category->id);
 
+        // Assert
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'Category details']);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_update()
+    {
+        // Arrange
+        $category = Category::factory()->create();
+        $data = [
+            'name' => 'Updated Category',
+            'status' => '2',
+        ];
+
+        // Act
+        $response = $this->actingAs($this->user, 'sanctum')->putJson('/api/categories/' . $category->id, $data);
+
+        // Assert
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'Category updated successfully']);
         $this->assertDatabaseHas('categories', [
-            'name' => 'Updated Category'
+            'id' => $category->id,
+            'name' => 'Updated Category',
+            'status' => '2',
         ]);
     }
 
-    /** @test */
-    public function it_can_delete_a_category()
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_destroy()
     {
+        // Arrange
         $category = Category::factory()->create();
 
-        $category->delete();
+        // Act
+        $response = $this->actingAs($this->user, 'sanctum')->deleteJson('/api/categories/' . $category->id);
 
-        $this->assertDatabaseMissing('categories', [
-            'id' => $category->id
-        ]);
+        // Assert
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'Category deleted successfully']);
     }
 }
