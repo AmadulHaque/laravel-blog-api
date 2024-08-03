@@ -8,21 +8,27 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Category extends Model implements HasMedia
+class Post extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
     // Fillable attributes for mass assignment
     protected $fillable = [
         'user_id',
-        'name',
+        'title',
         'slug',
+        'short_description',
+        'content',
+        'tags',
+        'allow_comments',
+        'is_featured',
         'status',
-        'image',
+        'thumbnail',
     ];
 
+
     // Appended attributes for model's array and JSON form
-    protected $appends = ['image', 'status_label'];
+    protected $appends = ['thumbnail', 'status_label'];
 
     // Hidden attributes for model's array and JSON form
     protected $hidden = [
@@ -31,10 +37,13 @@ class Category extends Model implements HasMedia
         'media',
     ];
 
+
+
     // Status constants
     public const PUBLISHED  = 1;
     public const PENDING    = 2;
     public const INACTIVE   = 3;
+
 
     // Status labels
     /**
@@ -42,13 +51,13 @@ class Category extends Model implements HasMedia
      */
     public static $statuses = [
         self::PUBLISHED => 'Published',
-        self::PENDING => 'Pending',
-        self::INACTIVE => 'Inactive'
+        self::PENDING   => 'Pending',
+        self::INACTIVE  => 'Inactive'
     ];
 
     // Mutator: Set the name and generate a unique slug
     /**
-     * Set the category's name and slug.
+     * Set the post's name and slug.
      *
      * @param string $name
      * @return void
@@ -56,41 +65,31 @@ class Category extends Model implements HasMedia
     public function setNameAttribute(string $name): void
     {
         $this->attributes['name'] = $name;
-
-        // Generate a unique slug
-        $slug = Str::slug($name);
-        $existingCount = self::where('slug', $slug)->where('id', '!=', $this->id)->count();
-
-        if ($existingCount > 0) {
-            $slug = $slug . '-' . (self::max('id') + 1);
-        }
-
-        $this->attributes['slug'] = $slug;
+        $this->attributes['slug'] = Str::slug($name);
     }
 
-    // Mutator: Set the image and manage media
+    // Mutator: Set the thumbnail and manage media
     /**
-     * Set the category's image.
+     * Set the post's thumbnail.
      *
      * @param string $value
      * @return void
      */
-    public function setImageAttribute(string $value): void
+    public function setThumbnailAttribute(string $value): void
     {
         // Delete the old image
-        if ($this->getFirstMedia('image')) {
-            $this->deleteImage();
+        if ($this->getFirstMedia('thumbnail')) {
+            $this->deleteThumbnail();
         }
-
         // Add new image
         if ($value) {
-            $this->addMedia($value)->toMediaCollection('image');
+            $this->addMedia($value)->toMediaCollection('thumbnail');
         }
     }
 
     // Accessor: Get the status label
     /**
-     * Get the category's status label.
+     * Get the post's status label.
      *
      * @return string
      */
@@ -99,21 +98,21 @@ class Category extends Model implements HasMedia
         return self::$statuses[$this->status] ?? 'Unknown';
     }
 
-    // Accessor: Get the image URL
+    // Accessor: Get the thumbnail URL
     /**
-     * Get the category's image URL.
+     * Get the post's thumbnail URL.
      *
      * @return string|null
      */
-    public function getImageAttribute(): ?string
+    public function getThumbnailAttribute(): ?string
     {
-        $media = $this->getFirstMedia('image');
+        $media = $this->getFirstMedia('thumbnail');
         return $media ? $media->getFullUrl() : null;
     }
 
-    // Relationship: Category belongs to a user
+    // Relationship: Post belongs to a user
     /**
-     * Get the user that owns the category.
+     * Get the user that owns the post.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -122,26 +121,26 @@ class Category extends Model implements HasMedia
         return $this->belongsTo(User::class);
     }
 
-    // Relationship: Category belongs to many posts
+    // Relationship: Post belongs to many categories
     /**
-     * The posts that belong to the category.
+     * The categories that belong to the post.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function posts()
+    public function categories()
     {
-        return $this->belongsToMany(Post::class);
+        return $this->belongsToMany(Category::class);
     }
 
-    // Custom method: Delete the image
+    // Custom method: Delete the thumbnail
     /**
-     * Delete the category's image.
+     * Delete the post's thumbnail.
      *
      * @return void
      */
-    public function deleteImage(): void
+    public function deleteThumbnail(): void
     {
-        $this->clearMediaCollection('image');
+        $this->clearMediaCollection('thumbnail');
     }
 
     // Boot method to handle model events
@@ -149,9 +148,9 @@ class Category extends Model implements HasMedia
     {
         parent::boot();
 
-        // Delete the image when the category is deleted
-        static::deleted(function ($category) {
-            $category->deleteImage();
+        // Delete the thumbnail when the post is deleted
+        static::deleted(function ($post) {
+            $post->deleteThumbnail();
         });
     }
 }
