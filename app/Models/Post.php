@@ -62,9 +62,9 @@ class Post extends Model implements HasMedia
      * @param string $name
      * @return void
      */
-    public function setNameAttribute(string $name): void
+    public function setTitleAttribute(string $name): void
     {
-        $this->attributes['name'] = $name;
+        $this->attributes['title'] = $name;
         $this->attributes['slug'] = Str::slug($name);
     }
 
@@ -72,10 +72,10 @@ class Post extends Model implements HasMedia
     /**
      * Set the post's thumbnail.
      *
-     * @param string $value
+     * @param  $value
      * @return void
      */
-    public function setThumbnailAttribute(string $value): void
+    public function setThumbnailAttribute($value): void
     {
         // Delete the old image
         if ($this->getFirstMedia('thumbnail')) {

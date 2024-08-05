@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\CategoryPost;
 use App\Models\Post;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class PostService
 {
@@ -29,7 +31,27 @@ class PostService
     public function createPost(array $data): Post
     {
         return DB::transaction(function() use ($data) {
-            return Post::create($data);
+
+            // category
+            $postCategory = $data['category_id'];
+            unset($data['category_id']);
+
+            $data['tags']   = implode(',', $data['tags']);
+            $data['user_id'] = Auth::user()->id;
+
+            // create post
+            $post = Post::create($data);
+
+            // create  post category
+            foreach ($postCategory as $caegoryid) {
+                CategoryPost::create([
+                    'category_id' => $caegoryid,
+                    'post_id'     =>  $post->id
+                ]);
+            }
+
+            return $post;
+
         });
     }
 
