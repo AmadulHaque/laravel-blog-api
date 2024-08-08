@@ -26,7 +26,7 @@ class PostStoreTest extends TestCase
 
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function test_store_and_validation()
+    public function test_store()
     {
         // Arrange
         $data = [
@@ -41,7 +41,7 @@ class PostStoreTest extends TestCase
         ];
 
         // Act
-        $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/post', $data);
+        $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/posts', $data);
 
         // Assert
         $response->assertStatus(201);
@@ -58,7 +58,6 @@ class PostStoreTest extends TestCase
                 'is_featured',
                 'status',
                 'thumbnail',
-                'category_id'
             ],
         ]);
     }

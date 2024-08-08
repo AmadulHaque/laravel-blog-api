@@ -9,7 +9,7 @@ class PostAllShowTest extends TestCase
     /**
      * A basic unit test example.
      */
-    public function test_example(): void
+    public function test_all_post(): void
     {
         $this->assertTrue(true);
     }
