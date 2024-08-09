@@ -10,6 +10,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 class CategoryTest extends TestCase
 {
     use RefreshDatabase;
+    
+    public $user;
 
     protected function setUp(): void
     {

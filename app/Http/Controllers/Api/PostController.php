@@ -24,7 +24,11 @@ class PostController extends Controller
     public function index(Request $request) :JsonResponse
     {
         $posts = $this->postService->getFilteredPosts($request->query());
-        return successResponse('All Post', $posts);
+
+        return successResponse('All Post', [
+            'posts'      => $posts->items(),
+            'totalPages' => $posts->lastPage(),
+        ]);
     }
 
     /**
@@ -60,6 +64,6 @@ class PostController extends Controller
     public function destroy(string $id)
     {
         $this->postService->deletePost($id);
-        return successResponse('Category deleted successfully');
+        return successResponse('Post deleted successfully');
     }
 }

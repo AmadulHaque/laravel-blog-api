@@ -12,6 +12,8 @@ class Post extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
+
+
     // Fillable attributes for mass assignment
     protected $fillable = [
         'user_id',
@@ -32,7 +34,6 @@ class Post extends Model implements HasMedia
 
     // Hidden attributes for model's array and JSON form
     protected $hidden = [
-        'created_at',
         'updated_at',
         'media',
     ];
@@ -110,6 +111,8 @@ class Post extends Model implements HasMedia
         return $media ? $media->getFullUrl() : null;
     }
 
+
+
     // Relationship: Post belongs to a user
     /**
      * Get the user that owns the post.
@@ -153,4 +156,5 @@ class Post extends Model implements HasMedia
             $post->deleteThumbnail();
         });
     }
+
 }
