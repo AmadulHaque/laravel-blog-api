@@ -14,7 +14,7 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-
+        $perPage = $request->input('perPage') ?? 15;
         $query = Category::with(['user:id,name']);
 
         if ($request->has('search')) {
@@ -25,7 +25,7 @@ class CategoryController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $categories = $query->paginate(10);
+        $categories = $query->paginate($perPage);
 
 
         return successResponse('All categories', [

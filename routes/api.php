@@ -26,7 +26,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('posts',PostController::class)->only('index','show','store','update','destroy');
 
 
-
     // user logout
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
