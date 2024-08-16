@@ -76,7 +76,6 @@ class PostService
             $postCategory = $data['category_id'];
             unset($data['category_id']);
 
-            $data['tags']   = implode(',', $data['tags']);
             $data['user_id'] = Auth::user()->id;
 
             // create post
@@ -97,7 +96,7 @@ class PostService
 
     public function getPostById(string $id): Post
     {
-        return Post::findOrFail($id);
+        return Post::with('categories')->findOrFail($id);
     }
 
     public function updatePost(string $id, array $data): Post
